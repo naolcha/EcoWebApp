@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="edit-profile-section">
+    <div class="container">
+        <h1>Редактирование профиля</h1>
+
+        <form action="/profile/edit" method="post" class="edit-profile-form">
+            <div class="form-group">
+                <label for="username">Имя пользователя</label>
+                <input type="text" id="username" name="username" value="{{ user.username }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Электронная почта</label>
+                <input type="email" id="email" name="email" value="{{ user.email }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Новый пароль (если хотите изменить)</label>
+                <input type="password" id="password" name="password" placeholder="Введите новый пароль">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            <a href="/profile" class="btn btn-secondary" style="margin-left:10px;">Отмена</a>
+        </form>
+    </div>
+</section>
+
+<style>
+.edit-profile-section {
+    padding: 40px 0;
+}
+.edit-profile-form {
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px 30px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    max-width: 500px;
+}
+.form-group {
+    margin-bottom: 20px;
+}
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+.btn-primary {
+    background-color: #16a34a;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+}
+.btn-secondary {
+    background-color: #e5e7eb;
+    color: #111827;
+    border-radius: 8px;
+    padding: 10px 20px;
+    text-decoration: none;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ЭкоЗаправки Москвы{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <a href="/">ЭкоЗаправки Москвы</a>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="/">Главная</a></li>
+                    <li><a href="/map">Карта</a></li>
+                    <li><a href="/stats">Статистика</a></li>
+                    <li><a href="/about">О проекте</a></li>
+                </ul>
+                <div class="nav-auth">
+                    {% if user %}
+                        <a href="/profile" class="btn btn-secondary">Профиль</a>
+                        <a href="/logout" class="btn btn-outline">Выйти</a>
+                    {% else %}
+                        <a href="/login" class="btn btn-secondary">Войти</a>
+                        <a href="/register" class="btn btn-primary">Регистрация</a>
+                    {% endif %}
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>Создано с заботой об экологии Москвы</p>
+            <p>Данные: <a href="https://data.mos.ru/" target="_blank">data.mos.ru</a></p>
+        </div>
+    </footer>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

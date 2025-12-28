@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Вход - ЭкоЗаправки Москвы{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+  <div class="container">
+    <div class="auth-form-wrapper">
+      <h1>Вход</h1>
+
+      <form action="/login" method="POST" class="auth-form" autocomplete="on">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            autocomplete="email"
+            inputmode="email"
+            placeholder="name@example.com"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="password">Пароль</label>
+          <div class="password-field">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              autocomplete="current-password"
+              placeholder="Введите пароль"
+            >
+            <button type="button" class="pwd-toggle" aria-label="Показать пароль" data-target="password">
+              Показать
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Войти</button>
+      </form>
+
+      <p class="auth-alt">
+        Нет аккаунта? <a href="/register">Зарегистрироваться</a>
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+.auth-page{
+  min-height: calc(100vh - 120px);
+  display:flex;
+  align-items:center;
+  padding:48px 0;
+  background: radial-gradient(1200px 500px at 30% 10%, rgba(22,163,74,.12), transparent 60%),
+              radial-gradient(900px 400px at 80% 30%, rgba(59,130,246,.10), transparent 60%),
+              #f8fafc;
+}
+
+.auth-form-wrapper{
+  max-width: 440px;
+  margin: 0 auto;
+  background:#fff;
+  border:1px solid rgba(15,23,42,.08);
+  border-radius:16px;
+  padding:28px 26px;
+  box-shadow: 0 10px 30px rgba(2,6,23,.08);
+}
+
+.auth-form-wrapper h1{
+  margin:0 0 18px;
+  font-size: 28px;
+  color:#0f172a;
+  letter-spacing:-0.02em;
+}
+
+.auth-form{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.form-group label{
+  display:block;
+  font-size: 13px;
+  color:#334155;
+  margin-bottom:6px;
+}
+
+.form-group input{
+  width:100%;
+  padding:12px 12px;
+  border-radius:12px;
+  border:1px solid rgba(15,23,42,.14);
+  background:#fff;
+  color:#0f172a;
+  outline:none;
+  transition: box-shadow .18s ease, border-color .18s ease, transform .18s ease;
+}
+
+.form-group input::placeholder{ color:#94a3b8; }
+
+.form-group input:focus{
+  border-color: rgba(22,163,74,.55);
+  box-shadow: 0 0 0 4px rgba(22,163,74,.18);
+}
+
+.password-field{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+.password-field input{
+  flex:1;
+}
+
+.pwd-toggle{
+  flex:0 0 auto;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border:1px solid rgba(15,23,42,.14);
+  background:#f8fafc;
+  color:#0f172a;
+  cursor:pointer;
+  transition: background .15s ease, transform .15s ease;
+}
+
+.pwd-toggle:hover{ background:#eef2f7; }
+.pwd-toggle:active{ transform: translateY(1px); }
+
+.btn.btn-primary.btn-block{
+  width:100%;
+  margin-top:6px;
+  padding:12px 14px;
+  border-radius:12px;
+  border:none;
+  background: linear-gradient(90deg, #16a34a, #22c55e);
+  color:#fff !important;
+  -webkit-text-fill-color:#fff !important;
+  font-weight:600;
+  cursor:pointer;
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  box-shadow: 0 10px 18px rgba(22,163,74,.18);
+}
+
+.btn.btn-primary.btn-block:hover{
+  filter: brightness(0.98);
+  box-shadow: 0 14px 22px rgba(22,163,74,.22);
+}
+
+.btn.btn-primary.btn-block:active{
+  transform: translateY(1px);
+}
+
+.auth-alt{
+  margin:16px 0 0;
+  font-size: 14px;
+  color:#475569;
+  text-align:center;
+}
+
+.auth-alt a{
+  color:#16a34a;
+  text-decoration:none;
+  font-weight:600;
+}
+
+.auth-alt a:hover{
+  text-decoration:underline;
+}
+</style>
+
+<script>
+(function () {
+  const btn = document.querySelector('.pwd-toggle');
+  if (!btn) return;
+
+  btn.addEventListener('click', function () {
+    const id = btn.getAttribute('data-target');
+    const input = document.getElementById(id);
+    if (!input) return;
+
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    btn.textContent = isPassword ? 'Скрыть' : 'Показать';
+    btn.setAttribute('aria-label', isPassword ? 'Скрыть пароль' : 'Показать пароль');
+    input.focus();
+  });
+})();
+</script>
+{% endblock %}

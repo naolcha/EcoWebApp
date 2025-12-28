@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Карта станций — ЭкоЗаправки Москвы{% endblock %}
+
+{% block content %}
+
+<section class="map-section">
+    <div class="container">
+        <div class="map-container">
+            <aside class="map-sidebar">
+                <div class="sidebar-card">
+
+                    <h2 class="sidebar-title">Интерактивная карта</h2>
+                    <p class="sidebar-subtitle">
+                        Найдите ближайшую экологичную автозаправку
+                    </p>
+                    <div class="sidebar-block">
+                        <label class="sidebar-label">Поиск</label>
+                        <input 
+                            type="text" 
+                            id="search-input" 
+                            class="sidebar-input"
+                            placeholder="Название или адрес..."
+                        >
+                    </div>
+                    <div class="sidebar-block">
+                        <label class="sidebar-label">Тип станции</label>
+
+                        <label class="checkbox">
+                            <input type="checkbox" id="filter-all" checked>
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-text">Все станции</span>
+                        </label>
+
+                        <label class="checkbox">
+                            <input type="checkbox" id="filter-eco" checked>
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-text">Экологичные</span>
+                        </label>
+
+                        <label class="checkbox">
+                            <input type="checkbox" id="filter-non-eco" checked>
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-text">Неэкологичные</span>
+                        </label>
+                    </div>
+                    <div class="sidebar-block">
+                        <label class="sidebar-label">Административный округ</label>
+                        <select id="admarea-filter" class="sidebar-select">
+                            <option value="">Все округа</option>
+                        </select>
+                    </div>
+                    <div class="sidebar-results">
+                        Найдено: <span id="results-count">0</span> станций
+                    </div>
+
+                </div>
+            </aside>
+            <div class="map-wrapper">
+                <div id="map"></div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="/static/js/map.js"></script>
+{% endblock %}

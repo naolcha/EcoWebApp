@@ -1,0 +1,179 @@
+{# frontend/templates/station.html #}
+{% extends "base.html" %}
+{% block title %}{{ station.name }} — ЭкоЗаправки{% endblock %}
+
+{% block content %}
+<section class="station-page">
+  <div class="container">
+
+    {% if msg %}
+      <div class="toast">
+        {% if msg == "fav_added" %}Станция добавлена в избранное.{% endif %}
+        {% if msg == "fav_removed" %}Станция удалена из избранного.{% endif %}
+        {% if msg == "review_added" %}Отзыв добавлен.{% endif %}
+      </div>
+    {% endif %}
+
+    <div class="station-head">
+      <div class="station-main">
+        <h1 class="station-title">{{ station.name }}</h1>
+        <div class="station-meta">
+          <div class="meta-item"><span class="meta-label">Адрес:</span> {{ station.address }}</div>
+          <div class="meta-item"><span class="meta-label">Район:</span> {{ station.district or "—" }}</div>
+          <div class="meta-item"><span class="meta-label">Округ:</span> {{ station.admarea or "—" }}</div>
+          <div class="meta-item"><span class="meta-label">Владелец:</span> {{ station.owner or "—" }}</div>
+          <div class="meta-item"><span class="meta-label">Проверка:</span>
+            {{ station.test_date.strftime("%d.%m.%Y") if station.test_date else "—" }}
+          </div>
+        </div>
+
+        <div class="station-badges">
+          <span class="badge rating">Средняя оценка: {{ avg_rating }}★</span>
+          {% if station.eco_status %}
+            <span class="badge eco eco-yes">Эко</span>
+          {% else %}
+            <span class="badge eco eco-no">Не эко</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="station-actions">
+        {% if user %}
+          {% if is_favorite %}
+            <form method="post" action="/station/{{ station.id }}/unfavorite">
+              <button class="btn danger" type="submit">Убрать из избранного</button>
+            </form>
+          {% else %}
+            <form method="post" action="/station/{{ station.id }}/favorite">
+              <button class="btn green" type="submit">Добавить в избранное</button>
+            </form>
+          {% endif %}
+        {% else %}
+          <a class="btn secondary" href="/login">Войти, чтобы добавить в избранное</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <h2 class="section-title">Отзывы</h2>
+
+    {% if user %}
+      <div class="review-form">
+        <h3>Оставить отзыв</h3>
+
+        <form method="post" action="/station/{{ station.id }}/review" enctype="multipart/form-data">
+          <div class="form-row">
+            <label>Оценка</label>
+            <select name="rating" required>
+              <option value="5">5</option>
+              <option value="4">4</option>
+              <option value="3">3</option>
+              <option value="2">2</option>
+              <option value="1">1</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label>Комментарий</label>
+            <textarea name="comment" rows="4" placeholder="Ваш комментарий (необязательно)"></textarea>
+          </div>
+
+          <div class="form-row">
+            <label>Фото (можно выбрать несколько, сохранится первое)</label>
+            <input type="file" name="images" multiple accept="image/*">
+          </div>
+
+          <button class="btn green" type="submit">Отправить</button>
+        </form>
+      </div>
+    {% else %}
+      <div class="callout">
+        <a href="/login">Войдите</a>, чтобы оставить отзыв.
+      </div>
+    {% endif %}
+
+    {% if reviews %}
+      <div class="reviews-grid">
+        {% for review in reviews %}
+          <div class="review-card">
+            <div class="review-top">
+              <div class="review-user">{{ review.username }}</div>
+              <div class="review-rating">{{ review.rating }}★</div>
+            </div>
+
+            {% if review.comment %}
+              <div class="review-comment">{{ review.comment }}</div>
+            {% endif %}
+
+            {% if review.photos and review.photos|length > 0 %}
+              <div class="review-photos-wrap">
+                {% for photo_url in review.photos %}
+                  <div class="photo-container">
+                    <img src="{{ photo_url }}" alt="Фото к отзыву" class="review-photo">
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <div class="review-date">
+              {{ review.created_at.strftime("%d.%m.%Y") if review.created_at else "" }}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">Пока нет отзывов.</p>
+    {% endif %}
+
+  </div>
+</section>
+
+<style>
+.station-page{background:#f8fafc;padding:48px 0;color:#0f172a;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.container{max-width:1100px;margin:0 auto;padding:0 16px}
+.station-head{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:start}
+.station-title{font-size:2rem;line-height:1.15;margin:0 0 10px}
+.station-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 18px;color:#334155}
+.meta-label{color:#64748b}
+.station-badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.badge{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 12px;font-size:.95rem;font-weight:600}
+.badge.rating{background:#e2e8f0;color:#0f172a}
+.badge.eco{color:#fff}
+.eco-yes{background:#16a34a}
+.eco-no{background:#f59e0b}
+.station-actions{display:flex;flex-direction:column;gap:10px;min-width:260px}
+.btn{border:0;border-radius:12px;padding:12px 14px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;justify-content:center;align-items:center;transition:transform .12s ease,opacity .12s ease}
+.btn:active{transform:translateY(1px)}
+.btn.green{background:#16a34a;color:#fff}
+.btn.danger{background:#dc2626;color:#fff}
+.btn.secondary{background:#0f172a;color:#fff}
+.divider{height:1px;background:#e2e8f0;margin:22px 0}
+.section-title{margin:0 0 16px;font-size:1.35rem}
+.review-form{background:#fff;border-radius:16px;padding:18px;box-shadow:0 6px 20px rgba(15,23,42,.06);margin:0 0 22px}
+.review-form h3{margin:0 0 12px}
+.form-row{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+input[type="file"],select,textarea{border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;font-size:1rem;background:#fff}
+textarea{resize:vertical}
+.callout{background:#fff;border-radius:16px;padding:14px 16px;border:1px solid #e2e8f0}
+.reviews-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.review-card{background:#fff;border-radius:16px;padding:14px 14px 12px;box-shadow:0 6px 20px rgba(15,23,42,.06)}
+.review-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.review-user{font-weight:800}
+.review-rating{font-weight:900;background:#e2e8f0;border-radius:999px;padding:6px 10px}
+.review-comment{color:#334155;margin:8px 0 10px;white-space:pre-wrap}
+.review-photos-wrap{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}
+.photo-container{width:120px;height:120px;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0}
+.review-photo{width:100%;height:100%;object-fit:cover;transition:transform 0.2s}
+.review-photo:hover{transform:scale(1.05)}
+.review-date{color:#64748b;font-size:.9rem;margin-top:8px}
+.muted{color:#64748b}
+
+.toast{background:#0f172a;color:#fff;border-radius:14px;padding:12px 14px;margin:0 0 14px;box-shadow:0 10px 30px rgba(15,23,42,.18)}
+@media (max-width:860px){
+  .station-head{grid-template-columns:1fr}
+  .station-actions{min-width:auto;flex-direction:row;flex-wrap:wrap}
+  .station-meta{grid-template-columns:1fr}
+}
+</style>
+{% endblock %}

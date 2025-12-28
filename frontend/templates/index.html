@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+    <div class="container hero-content">
+        <h1>Интерактивная карта автозаправочных станций по уровню экологичности топлива</h1>
+        <a href="/map" class="hero-btn">Посмотреть карту</a>
+    </div>
+</section>
+
+<section class="stats-overview">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>{{ total_stations }}</h3>
+                <p>Станций в базе</p>
+            </div>
+            <div class="stat-card highlight">
+                <h3>{{ eco_percentage }}%</h3>
+                <p>Экологичных станций</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ last_update }}</h3>
+                <p>Последнее обновление</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="why-important">
+    <div class="container">
+        <h2>Почему это важно</h2>
+        <div class="cards-grid">
+            <div class="card">
+                <div class="card-icon"></div>
+                <h3>Чистый воздух</h3>
+                <p>Экологичное топливо снижает выбросы вредных веществ и улучшает качество воздуха в городе</p>
+            </div>
+            
+            <div class="card">
+                <div class="card-icon"></div>
+                <h3>Качество топлива</h3>
+                <p>Станции с сертифицированным топливом соответствуют современным экологическим стандартам</p>
+            </div>
+            
+            <div class="card">
+                <div class="card-icon"></div>
+                <h3>Ответственное потребление</h3>
+                <p>Осознанный выбор экологичных заправок помогает формировать устойчивую городскую среду</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

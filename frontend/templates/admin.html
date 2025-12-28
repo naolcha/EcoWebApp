@@ -1,0 +1,771 @@
+{% extends "base.html" %}
+
+{% block title %}Панель администратора{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard">
+  <header class="admin-header">
+    <div>
+      <h1>Панель администратора</h1>
+      <p>Здравствуйте, <span class="admin-name">{{ user.username }}</span> <span class="role-badge">{{ user.role_name }}</span></p>
+    </div>
+  </header>
+
+  <div class="stats-grid">
+    <div class="stat-card blue">
+      <h3>Пользователи</h3>
+      <p class="stat-value">{{ users|length }}</p>
+      <i class="fas fa-users"></i>
+    </div>
+    <div class="stat-card green">
+      <h3>АЗС</h3>
+      <p class="stat-value">{{ stations|length }}</p>
+      <i class="fas fa-gas-pump"></i>
+    </div>
+    <div class="stat-card orange">
+      <h3>Отзывы</h3>
+      <p class="stat-value">{{ reviews|length }}</p>
+      <i class="fas fa-comments"></i>
+    </div>
+    <div class="stat-card red">
+      <h3>Администраторы</h3>
+      <p class="stat-value">{{ users|selectattr("role_name", "equalto", "ADMIN")|list|length }}</p>
+      <i class="fas fa-user-shield"></i>
+    </div>
+  </div>
+
+  <ul class="nav-tabs">
+    <li class="active" data-target="users">Пользователи</li>
+    <li data-target="roles">Роли</li>
+    <li data-target="stations">АЗС</li>
+    <li data-target="reviews">Отзывы</li>
+    <li data-target="review-photos">Фото отзывов</li>
+    <li data-target="favorites">Избранное</li>
+  </ul>
+
+  <div id="tab-users" class="tab-pane active">
+    <div class="table-toolbar">
+      <div class="table-toolbar-left">
+        <h2>Управление пользователями</h2>
+      </div>
+      <div class="table-toolbar-right">
+        <button class="btn small blue" type="button" id="add-user-btn">Добавить</button>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Имя</th>
+            <th>Email</th>
+            <th>Роль</th>
+            <th>Регистрация</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td>#{{ u.id }}</td>
+            <td>
+              {{ u.username }}
+              {% if u.id == user.id %}
+              <span class="self-badge">Вы</span>
+              {% endif %}
+            </td>
+            <td>{{ u.email }}</td>
+            <td>
+              <span class="role {{ 'admin' if u.role_name == 'ADMIN' else 'user' }}">{{ u.role_name }}</span>
+            </td>
+            <td>{{ u.created_at.strftime('%d.%m.%Y') }}</td>
+            <td class="actions-cell">
+              <button
+                class="btn small blue edit-user-btn"
+                data-id="{{ u.id }}"
+                data-username="{{ u.username }}"
+                data-email="{{ u.email }}"
+                data-role="{{ u.role_name }}"
+              >
+                Редактировать
+              </button>
+
+              {% if u.role_name != 'ADMIN' %}
+              <button class="btn small secondary" type="button" onclick="viewUser({{ u.id }})">Посмотреть</button>
+              <button class="btn small danger" type="button" onclick="deleteUser({{ u.id }}, this)">Удалить</button>
+              {% else %}
+              <span class="muted">Системный админ</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-roles" class="tab-pane">
+    <div class="table-toolbar">
+      <div class="table-toolbar-left">
+        <h2>Роли</h2>
+      </div>
+      <div class="table-toolbar-right">
+        <button class="btn small blue" type="button" id="add-role-btn">Добавить</button>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Название</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for rr in roles %}
+          <tr>
+            <td>#{{ rr.role_id }}</td>
+            <td>{{ rr.role_name }}</td>
+            <td class="actions-cell">
+              <button class="btn small danger" type="button" onclick="deleteRole({{ rr.role_id }}, this)">Удалить</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-stations" class="tab-pane">
+    <div class="table-toolbar">
+      <div class="table-toolbar-left">
+        <h2>Управление автозаправками</h2>
+      </div>
+      <div class="table-toolbar-right">
+        <button class="btn small blue" type="button" id="add-station-btn">Добавить</button>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Название</th>
+            <th>Адрес</th>
+            <th>Район</th>
+            <th>Эко-статус</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in stations %}
+          <tr>
+            <td>#{{ s.id }}</td>
+            <td>{{ s.name }}</td>
+            <td>{{ s.address or "—" }}</td>
+            <td>{{ s.district or "—" }}</td>
+            <td>
+              <span class="eco {{ 'green' if s.eco_status else 'yellow' }}">
+                {% if s.eco_status %}Эко{% else %}Не эко{% endif %}
+              </span>
+            </td>
+            <td class="actions-cell">
+              <button
+                class="btn small blue edit-station-btn"
+                data-id="{{ s.id }}"
+                data-name="{{ s.name }}"
+                data-address="{{ s.address or '' }}"
+                data-district="{{ s.district or '' }}"
+                data-admarea="{{ s.admarea or '' }}"
+                data-owner="{{ s.owner or '' }}"
+                data-latitude="{{ s.latitude or '' }}"
+                data-longitude="{{ s.longitude or '' }}"
+                data-eco="{{ '1' if s.eco_status else '0' }}"
+                data-testdate="{{ s.test_date.strftime('%Y-%m-%d') if s.test_date else '' }}"
+              >
+                Редактировать
+              </button>
+
+              <button class="btn small secondary" type="button" onclick="viewStation({{ s.id }})">Посмотреть</button>
+              <button class="btn small danger" type="button" onclick="deleteStation({{ s.id }}, this)">Удалить</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-reviews" class="tab-pane">
+    <div class="table-toolbar">
+      <div class="table-toolbar-left">
+        <h2>Управление отзывами</h2>
+      </div>
+      <div class="table-toolbar-right">
+        <button class="btn small blue" type="button" id="add-review-btn">Добавить</button>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Пользователь</th>
+            <th>АЗС</th>
+            <th>Оценка</th>
+            <th>Комментарий</th>
+            <th>Дата</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in reviews %}
+          <tr>
+            <td>#{{ r.id }}</td>
+            <td>{{ r.user_username or "—" }}</td>
+            <td>{{ r.station_name or "—" }}</td>
+            <td>{{ r.rating }}/5</td>
+            <td>{{ r.comment[:60] if r.comment else "—" }}</td>
+            <td>{{ r.created_at.strftime('%d.%m.%Y') }}</td>
+            <td class="actions-cell">
+              <button
+                class="btn small blue edit-review-btn"
+                data-id="{{ r.id }}"
+                data-rating="{{ r.rating }}"
+                data-comment="{{ r.comment or '' }}"
+              >
+                Редактировать
+              </button>
+
+              <button class="btn small secondary" type="button" onclick="viewReview({{ r.id }})">Посмотреть</button>
+              <button class="btn small danger" type="button" onclick="deleteReview({{ r.id }}, this)">Удалить</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-review-photos" class="tab-pane">
+    <div class="table-toolbar">
+      <div class="table-toolbar-left">
+        <h2>Фото отзывов</h2>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>ID отзыва</th>
+            <th>URL</th>
+            <th>Дата</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in review_photos %}
+          <tr>
+            <td>#{{ p.id }}</td>
+            <td>#{{ p.review_id }}</td>
+            <td style="max-width:420px; word-break:break-all;">{{ p.url }}</td>
+            <td>{{ p.created_at.strftime('%d.%m.%Y') }}</td>
+            <td class="actions-cell">
+              <button class="btn small danger" type="button" onclick="deleteReviewPhoto({{ p.id }}, this)">Удалить</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-favorites" class="tab-pane">
+    <div class="table-toolbar">
+      <div class="table-toolbar-left">
+        <h2>Избранное</h2>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID пользователя</th>
+            <th>Пользователь</th>
+            <th>ID АЗС</th>
+            <th>АЗС</th>
+            <th>Дата</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in favorites %}
+          <tr>
+            <td>#{{ f.user_id }}</td>
+            <td>{{ f.username }}</td>
+            <td>#{{ f.station_id }}</td>
+            <td>{{ f.station_name }}</td>
+            <td>{{ f.created_at.strftime('%d.%m.%Y') }}</td>
+            <td class="actions-cell">
+              <button class="btn small danger" type="button" onclick="deleteFavorite({{ f.user_id }}, {{ f.station_id }}, this)">Удалить</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="edit-modal" class="edit-modal hidden">
+  <div class="edit-modal-backdrop"></div>
+  <div class="edit-modal-content">
+    <h2 id="edit-modal-title">Редактирование</h2>
+    <form id="edit-form">
+      <div id="edit-form-body"></div>
+      <div class="edit-modal-actions">
+        <button type="button" class="btn small secondary" id="edit-cancel">Отмена</button>
+        <button type="submit" class="btn small blue" id="edit-save">Сохранить</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.admin-dashboard{padding:24px;background:#f6f8fb;min-height:100vh}
+.admin-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px}
+.admin-header h1{font-size:28px;line-height:1.2;color:#0f172a;margin:0}
+.admin-header p{margin:8px 0 0;color:#64748b;font-size:14px}
+.admin-name{color:#0f172a;font-weight:600}
+.role-badge{display:inline-flex;align-items:center;gap:6px;background:#111827;color:#fff;padding:2px 10px;border-radius:999px;font-size:12px;margin-left:8px}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0 22px}
+.stat-card{position:relative;border-radius:16px;padding:16px 16px 16px;color:#fff;font-weight:600;box-shadow:0 10px 30px rgba(2,6,23,.08);overflow:hidden;min-height:92px}
+.stat-card h3{margin:0;font-size:13px;font-weight:600;opacity:.95}
+.stat-value{margin:8px 0 0;font-size:28px;font-weight:800;letter-spacing:.2px}
+.stat-card i{position:absolute;right:14px;bottom:12px;font-size:34px;opacity:.18}
+.stat-card.blue{background:linear-gradient(135deg,#2563eb,#1d4ed8)}
+.stat-card.green{background:linear-gradient(135deg,#16a34a,#15803d)}
+.stat-card.orange{background:linear-gradient(135deg,#f97316,#ea580c)}
+.stat-card.red{background:linear-gradient(135deg,#dc2626,#b91c1c)}
+
+.nav-tabs{display:flex;gap:8px;list-style:none;margin:0 0 14px;padding:0;border-bottom:1px solid #e5e7eb}
+.nav-tabs li{cursor:pointer;padding:10px 12px;border-radius:12px 12px 0 0;color:#64748b;font-weight:600;font-size:14px}
+.nav-tabs li.active{color:#0f172a;background:#fff;border:1px solid #e5e7eb;border-bottom-color:#fff}
+.nav-tabs li:hover{color:#0f172a}
+
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+.table-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0}
+.table-toolbar h2{margin:0;font-size:18px;color:#0f172a}
+.table-toolbar-right{display:flex;gap:10px;align-items:center}
+
+.table-wrapper{overflow:auto;border-radius:16px;background:#fff;box-shadow:0 8px 26px rgba(2,6,23,.06);border:1px solid #eef2f7}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px;min-width:980px}
+th,td{padding:12px 14px;border-bottom:1px solid #eef2f7;vertical-align:middle}
+th{position:sticky;top:0;background:#f8fafc;color:#64748b;text-transform:uppercase;font-size:12px;letter-spacing:.5px;text-align:left}
+tr:hover td{background:#fbfdff}
+.actions-cell{white-space:nowrap;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+.role.admin{color:#dc2626;font-weight:700}
+.role.user{color:#64748b;font-weight:600}
+.self-badge{background:#e0f2fe;color:#075985;font-size:12px;padding:2px 8px;border-radius:999px;margin-left:6px}
+.eco.green{color:#16a34a;font-weight:700}
+.eco.yellow{color:#ca8a04;font-weight:700}
+.muted{color:#94a3b8;font-size:13px}
+
+.btn.small{border:1px solid transparent;border-radius:12px;padding:8px 10px;font-size:13px;font-weight:700;cursor:pointer;transition:.2s;line-height:1;background:#334155;color:#fff}
+.btn.small.blue{background:#2563eb}
+.btn.small.secondary{background:#fff;color:#0f172a;border-color:#e5e7eb}
+.btn.small.danger{background:#dc2626}
+.btn.small:hover{transform:translateY(-1px)}
+.btn.small:active{transform:translateY(0)}
+.btn.small:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+.edit-modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:200}
+.edit-modal.hidden{display:none}
+.edit-modal-backdrop{position:absolute;inset:0;background:rgba(2,6,23,.52)}
+.edit-modal-content{position:relative;background:#fff;border-radius:18px;padding:18px 18px 16px;width:100%;max-width:560px;box-shadow:0 30px 80px rgba(2,6,23,.35);border:1px solid #eef2f7}
+#edit-modal-title{margin:0 0 12px;font-size:18px;color:#0f172a}
+#edit-form-body .form-group{margin-bottom:10px}
+#edit-form-body label{display:block;margin-bottom:6px;font-size:13px;color:#475569;font-weight:700}
+#edit-form-body input,#edit-form-body select,#edit-form-body textarea{width:100%;padding:10px 12px;border-radius:12px;border:1px solid #e5e7eb;font-size:14px;outline:none;background:#fff}
+#edit-form-body input:focus,#edit-form-body select:focus,#edit-form-body textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.14)}
+#edit-form-body textarea{resize:vertical;min-height:96px}
+.edit-modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
+
+@media (max-width: 900px){
+  table{min-width:860px}
+}
+</style>
+
+<script>
+  document.querySelectorAll('.nav-tabs li').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.nav-tabs li').forEach(function (t) { t.classList.remove('active'); });
+      document.querySelectorAll('.tab-pane').forEach(function (p) { p.classList.remove('active'); });
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.target).classList.add('active');
+    });
+  });
+
+  window.viewStation = function (stationId) { window.open('/station/' + stationId, '_blank'); };
+  window.viewUser = function (userId) { window.open('/profile/' + userId, '_blank'); };
+  window.viewReview = function (reviewId) { window.open('/admin#review-' + reviewId, '_blank'); };
+
+  window.deleteStation = async function (stationId, btn) {
+    if (!confirm('Вы уверены, что хотите удалить эту автозаправку? Все отзывы на эту станцию также будут удалены.')) return;
+    const button = btn || null;
+    const originalText = button ? button.textContent : null;
+    if (button) { button.textContent = 'Удаление...'; button.disabled = true; }
+
+    try {
+      const response = await fetch('/admin/stations/' + stationId, { method: 'DELETE' });
+      const data = await response.json();
+      if (data.success) { alert('Автозаправка успешно удалена'); setTimeout(function () { location.reload(); }, 700); }
+      else { alert('Ошибка: ' + (data.error || data.detail || 'неизвестная ошибка')); if (button) { button.textContent = originalText; button.disabled = false; } }
+    } catch (error) {
+      alert('Ошибка сети: ' + error);
+      if (button) { button.textContent = originalText; button.disabled = false; }
+    }
+  };
+
+  window.deleteReview = async function (reviewId, btn) {
+    if (!confirm('Вы уверены, что хотите удалить этот отзыв?')) return;
+    const button = btn || null;
+    const originalText = button ? button.textContent : null;
+    if (button) { button.textContent = 'Удаление...'; button.disabled = true; }
+
+    try {
+      const response = await fetch('/admin/reviews/' + reviewId, { method: 'DELETE' });
+      const data = await response.json();
+      if (data.success) { alert('Отзыв успешно удален'); setTimeout(function () { location.reload(); }, 700); }
+      else { alert('Ошибка: ' + (data.error || data.detail || 'неизвестная ошибка')); if (button) { button.textContent = originalText; button.disabled = false; } }
+    } catch (error) {
+      alert('Ошибка сети: ' + error);
+      if (button) { button.textContent = originalText; button.disabled = false; }
+    }
+  };
+
+  window.deleteUser = async function (userId, btn) {
+    if (!confirm('Вы уверены, что хотите удалить пользователя?')) return;
+    const button = btn || null;
+    const originalText = button ? button.textContent : null;
+    if (button) { button.textContent = 'Удаление...'; button.disabled = true; }
+
+    try {
+      const response = await fetch('/admin/users/' + userId, { method: 'DELETE' });
+      const data = await response.json();
+      if (data.success) { alert('Пользователь успешно удален'); setTimeout(function () { location.reload(); }, 700); }
+      else { alert('Ошибка: ' + (data.error || data.detail || 'неизвестная ошибка')); if (button) { button.textContent = originalText; button.disabled = false; } }
+    } catch (error) {
+      alert('Ошибка сети: ' + error);
+      if (button) { button.textContent = originalText; button.disabled = false; }
+    }
+  };
+
+  window.deleteRole = async function (roleId, btn) {
+    if (!confirm('Удалить роль?')) return;
+    const button = btn || null;
+    const originalText = button ? button.textContent : null;
+    if (button) { button.textContent = 'Удаление...'; button.disabled = true; }
+
+    try {
+      const response = await fetch('/admin/roles/' + roleId, { method: 'DELETE' });
+      const data = await response.json();
+      if (data.success) { location.reload(); }
+      else { alert('Ошибка: ' + (data.error || data.detail || 'неизвестная ошибка')); }
+    } catch (e) {
+      alert('Ошибка сети: ' + e);
+    } finally {
+      if (button) { button.textContent = originalText; button.disabled = false; }
+    }
+  };
+
+  window.deleteReviewPhoto = async function (photoId, btn) {
+    if (!confirm('Удалить фото?')) return;
+    const button = btn || null;
+    const originalText = button ? button.textContent : null;
+    if (button) { button.textContent = 'Удаление...'; button.disabled = true; }
+
+    try {
+      const response = await fetch('/admin/review-photos/' + photoId, { method: 'DELETE' });
+      const data = await response.json();
+      if (data.success) { location.reload(); }
+      else { alert('Ошибка: ' + (data.error || data.detail || 'неизвестная ошибка')); }
+    } catch (e) {
+      alert('Ошибка сети: ' + e);
+    } finally {
+      if (button) { button.textContent = originalText; button.disabled = false; }
+    }
+  };
+
+  window.deleteFavorite = async function (userId, stationId, btn) {
+    if (!confirm('Удалить из избранного?')) return;
+    const button = btn || null;
+    const originalText = button ? button.textContent : null;
+    if (button) { button.textContent = 'Удаление...'; button.disabled = true; }
+
+    try {
+      const response = await fetch('/admin/favorites/' + userId + '/' + stationId, { method: 'DELETE' });
+      const data = await response.json();
+      if (data.success) { location.reload(); }
+      else { alert('Ошибка: ' + (data.error || data.detail || 'неизвестная ошибка')); }
+    } catch (e) {
+      alert('Ошибка сети: ' + e);
+    } finally {
+      if (button) { button.textContent = originalText; button.disabled = false; }
+    }
+  };
+
+  document.getElementById('add-role-btn')?.addEventListener('click', async function () {
+    const rn = (prompt('Введите название роли :') || '').trim();
+    if (!rn) return;
+
+    try {
+      const response = await fetch('/admin/roles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role_name: rn })
+      });
+      const data = await response.json();
+      if (data.success) location.reload();
+      else alert('Ошибка: ' + (data.error || data.detail || 'неизвестная ошибка'));
+    } catch (e) {
+      alert('Ошибка сети: ' + e);
+    }
+  });
+
+  let currentEditType = null;
+  let currentEditId = null;
+
+  const editModal = document.getElementById('edit-modal');
+  const editForm = document.getElementById('edit-form');
+  const editFormBody = document.getElementById('edit-form-body');
+  const editModalTitle = document.getElementById('edit-modal-title');
+  const editCancelBtn = document.getElementById('edit-cancel');
+
+  function openEditModal(type, data) {
+    currentEditType = type;
+    currentEditId = data.id ? Number(data.id) : null;
+    editFormBody.innerHTML = '';
+
+    if (type === 'user') {
+      editModalTitle.textContent = (currentEditId ? 'Редактирование пользователя #' + data.id : 'Добавление пользователя');
+      editFormBody.innerHTML = `
+        <div class="form-group">
+          <label>Имя пользователя</label>
+          <input type="text" name="username" value="${data.username || ''}" required>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" name="email" value="${data.email || ''}" required>
+        </div>
+        <div class="form-group">
+          <label>Роль</label>
+          <select name="role">
+            <option value="USER" ${data.role === 'USER' ? 'selected' : ''}>USER</option>
+            <option value="ADMIN" ${data.role === 'ADMIN' ? 'selected' : ''}>ADMIN</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>${currentEditId ? 'Новый пароль (опционально)' : 'Пароль'}</label>
+          <input type="password" name="password" placeholder="${currentEditId ? 'Оставьте пустым, чтобы не менять' : 'Введите пароль'}" ${currentEditId ? '' : 'required'}>
+        </div>
+      `;
+    }
+
+    if (type === 'station') {
+      editModalTitle.textContent = (currentEditId ? 'Редактирование АЗС #' + data.id : 'Добавление АЗС');
+      editFormBody.innerHTML = `
+        <div class="form-group">
+          <label>Название</label>
+          <input type="text" name="name" value="${data.name || ''}" required>
+        </div>
+        <div class="form-group">
+          <label>Адрес</label>
+          <input type="text" name="address" value="${data.address || ''}">
+        </div>
+        <div class="form-group">
+          <label>Район</label>
+          <input type="text" name="district" value="${data.district || ''}">
+        </div>
+        <div class="form-group">
+          <label>Административный округ</label>
+          <input type="text" name="admarea" value="${data.admarea || ''}">
+        </div>
+        <div class="form-group">
+          <label>Владелец</label>
+          <input type="text" name="owner" value="${data.owner || ''}">
+        </div>
+        <div class="form-group">
+          <label>Широта</label>
+          <input type="text" name="latitude" value="${data.latitude || ''}">
+        </div>
+        <div class="form-group">
+          <label>Долгота</label>
+          <input type="text" name="longitude" value="${data.longitude || ''}">
+        </div>
+        <div class="form-group">
+          <label>Дата проверки</label>
+          <input type="date" name="test_date" value="${data.testdate || ''}">
+        </div>
+        <div class="form-group">
+          <label>Эко-статус</label>
+          <select name="eco_status">
+            <option value="1" ${data.eco === '1' ? 'selected' : ''}>Экологичная</option>
+            <option value="0" ${data.eco === '0' ? 'selected' : ''}>Неэкологичная</option>
+          </select>
+        </div>
+      `;
+    }
+
+    if (type === 'review') {
+      editModalTitle.textContent = (currentEditId ? 'Редактирование отзыва #' + data.id : 'Добавление отзыва');
+      editFormBody.innerHTML = `
+        <div class="form-group">
+          <label>Оценка</label>
+          <select name="rating" required>
+            <option value="5" ${Number(data.rating) === 5 ? 'selected' : ''}>5</option>
+            <option value="4" ${Number(data.rating) === 4 ? 'selected' : ''}>4</option>
+            <option value="3" ${Number(data.rating) === 3 ? 'selected' : ''}>3</option>
+            <option value="2" ${Number(data.rating) === 2 ? 'selected' : ''}>2</option>
+            <option value="1" ${Number(data.rating) === 1 ? 'selected' : ''}>1</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Комментарий</label>
+          <textarea name="comment">${data.comment || ''}</textarea>
+        </div>
+        <div class="form-group">
+          <label>ID пользователя</label>
+          <input type="number" name="user_id" min="1" required>
+        </div>
+        <div class="form-group">
+          <label>ID АЗС</label>
+          <input type="number" name="station_id" min="1" required>
+        </div>
+      `;
+    }
+
+    editModal.classList.remove('hidden');
+  }
+
+  function closeEditModal() {
+    editModal.classList.add('hidden');
+    currentEditType = null;
+    currentEditId = null;
+    editFormBody.innerHTML = '';
+  }
+
+  editCancelBtn.addEventListener('click', closeEditModal);
+  editModal.querySelector('.edit-modal-backdrop').addEventListener('click', closeEditModal);
+
+  editForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    if (!currentEditType) return;
+
+    const formData = new FormData(editForm);
+    const payload = {};
+    formData.forEach((value, key) => { if (value !== '') payload[key] = value; });
+
+    let baseUrl = '';
+    if (currentEditType === 'user') baseUrl = '/admin/users';
+    if (currentEditType === 'station') baseUrl = '/admin/stations';
+    if (currentEditType === 'review') baseUrl = '/admin/reviews';
+
+    let url = baseUrl;
+    let method = 'POST';
+    if (currentEditId) { method = 'PUT'; url = baseUrl + '/' + currentEditId; }
+
+    const saveBtn = document.getElementById('edit-save');
+    const originalText = saveBtn.textContent;
+    saveBtn.textContent = 'Сохранение...';
+    saveBtn.disabled = true;
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        alert(currentEditId ? 'Изменения сохранены' : 'Запись добавлена');
+        closeEditModal();
+        setTimeout(function () { location.reload(); }, 700);
+      } else {
+        alert('Ошибка: ' + (data.error || data.detail || 'неизвестная ошибка'));
+      }
+    } catch (error) {
+      alert('Ошибка сети: ' + error);
+    } finally {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }
+  });
+
+  document.querySelectorAll('.edit-user-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      openEditModal('user', {
+        id: btn.dataset.id,
+        username: btn.dataset.username,
+        email: btn.dataset.email,
+        role: btn.dataset.role
+      });
+    });
+  });
+
+  document.querySelectorAll('.edit-station-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      openEditModal('station', {
+        id: btn.dataset.id,
+        name: btn.dataset.name,
+        address: btn.dataset.address,
+        district: btn.dataset.district,
+        admarea: btn.dataset.admarea,
+        owner: btn.dataset.owner,
+        latitude: btn.dataset.latitude,
+        longitude: btn.dataset.longitude,
+        eco: btn.dataset.eco,
+        testdate: btn.dataset.testdate
+      });
+    });
+  });
+
+  document.querySelectorAll('.edit-review-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      openEditModal('review', {
+        id: btn.dataset.id,
+        rating: btn.dataset.rating,
+        comment: btn.dataset.comment
+      });
+    });
+  });
+
+  document.getElementById('add-user-btn')?.addEventListener('click', function () {
+    openEditModal('user', { id: null, username: '', email: '', role: 'USER' });
+  });
+
+  document.getElementById('add-station-btn')?.addEventListener('click', function () {
+    openEditModal('station', {
+      id: null, name: '', address: '', district: '', admarea: '', owner: '',
+      latitude: '', longitude: '', eco: '0', testdate: ''
+    });
+  });
+
+  document.getElementById('add-review-btn')?.addEventListener('click', function () {
+    openEditModal('review', { id: null, rating: 5, comment: '' });
+  });
+</script>
+{% endblock %}

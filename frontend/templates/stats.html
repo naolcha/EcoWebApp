@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Статистика - ЭкоЗаправки Москвы{% endblock %}
+
+{% block content %}
+<section class="stats-page">
+  <div class="container">
+    <h1>Статистика и аналитика</h1>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Распределение станций по округам</h3>
+        <div class="chart-canvas">
+          <canvas id="districtChart"></canvas>
+        </div>
+        <p class="chart-description">Количество заправок в каждом административном округе Москвы</p>
+      </div>
+
+      <div class="chart-card">
+        <h3>Географическая кластеризация K-means
+            </h3>
+        <div class="chart-canvas">
+          <canvas id="clustersChart"></canvas>
+        </div>
+        <p class="chart-description">Показывает группы станций по близости координат; нужна, чтобы увидеть зоны концентрации и сравнить состав кластеров.
+            Точки — станции (координаты). Цвет — кластер (K-means). Наведите курсор, чтобы увидеть статус и координаты.ы</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/static/js/stats.js"></script>
+{% endblock %}
