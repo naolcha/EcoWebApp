@@ -1,0 +1,10 @@
+@font-face {
+    font-family: "GPN DIN";
+    src: url("/static/fonts/gpn_dincondensed-bold.woff2") format("woff2"),
+         url("/static/fonts/gpn_dincondensed-bold.woff") format("woff"),
+         url("/static/fonts/gpn_dincondensed-bold.ttf") format("truetype"),
+         url("/static/fonts/gpn_dincondensed-bold.svg#gpndin") format("svg");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
